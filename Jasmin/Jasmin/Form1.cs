@@ -194,7 +194,7 @@ namespace Jasmin
         //we use this last message to know what was the last Id
         MessageData LastMessage = new MessageData();
         //u will be used to read 4 lines at a time from listener and create MessageData objects
-        short u = 0;
+        short u = 1;
         //firebase configuration
         IFirebaseConfig config = new FirebaseConfig
         {
