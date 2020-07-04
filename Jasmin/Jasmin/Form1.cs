@@ -14,9 +14,11 @@ using Firebase;
 using FireSharp;
 using FireSharp.Config;
 using FireSharp.EventStreaming;
+using FireSharp.Extensions;
 using FireSharp.Interfaces;
 using FireSharp.Response;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Jasmin
 {
@@ -27,6 +29,7 @@ namespace Jasmin
 
         public Form1()
         {
+            
             InitializeComponent();
             try
             {
@@ -56,49 +59,40 @@ namespace Jasmin
                 Shoutout = false
             };
 
-            SetResponse response = await client.SetAsync("Groups/GrupulMafiaHate/"+messageData.Id, messageData);
+            SetResponse response = await client.SetAsync("Groups/"+CurrentGroup+"/"+messageData.Id, messageData);
             MessageData result = response.ResultAs<MessageData>();
 
-            MessageBox.Show("trimite mesaju" + result);
+            //MessageBox.Show("trimite mesaju" + result);
 
         }
-
+        private List<Group> Groups = new List<Group>();
         private async void Form1_LoadAsync(object sender, EventArgs e)
         {
 
             client = new FireSharp.FirebaseClient(config);
 
-            FirebaseListener = await client.OnAsync("Groups/GrupulMafiaHate/", (sender1, args, context) => {
+            FirebaseResponse response = await client.GetAsync("Groups/");
 
-                if (lstMesaje.InvokeRequired)
-                {
-                    this.addMesage(args);
-                }
-                else
-                    lstMesaje.Items.Add(args.Data);
-            });
-            
-                FirebaseResponse response = await client.GetAsync("Groups/GrupulMafiaHate");
-            try
+            var obj = JObject.Parse(response.Body);
+            foreach(var child in obj)
             {
-                List<MessageData> list = response.ResultAs<List<MessageData>>().ToList();
-                foreach (var el in list)
-                    if (el != null && list[0] != null && !el.Equals(list[0]))
-                    {
-                        MessageList.Add(el);
-                        this.writeMessage(el);
-
-                    }
+                Groups.Add(new Group(child));
             }
-            catch { }
+
+           
 
 
+        }
+        private string[] splitSubstring(string target, string substring)
+        {
+
+            return target.Split(new string[] { substring }, StringSplitOptions.None);
         }
         private void writeMessage(MessageData mesaj)
         {
             lstMesaje.Items.Add(mesaj.Name+":"+mesaj.Message);
         }
-        private async void addMesage(ValueAddedEventArgs args)
+        private void addMesage(ValueAddedEventArgs args)
         {
             if (u < 4)
             {
@@ -167,7 +161,7 @@ namespace Jasmin
         }
         
 
-        private async void button1_ClickAsync(object sender, EventArgs e)
+        private void button1_ClickAsync(object sender, EventArgs e)
         {
           
 
@@ -181,12 +175,16 @@ namespace Jasmin
             writer.Close();
             ostrm.Close();
         }
+
+
+        private string CurrentGroup = "GrupulMafiaHate";
         //Changing Console to a file
         FileStream ostrm;
         StreamWriter writer;
         TextWriter oldOut = Console.Out;
         //User Id to identify current user
-        User_Id CurrentUser = new User_Id() { Email = "marinaratoi@calutu.com", Password = "Parola", Cnp = "17896734543", Name = "Vasilica" };
+        //User_Id CurrentUser = new User_Id() { Email = "marinaratoi@calutu.com", Password = "Parola", Cnp = "17896734543", Name = "Vasilica" };
+        User_Id CurrentUser = new User_Id() { Email = "marinaratoi@calutu.com", Password = "Zeu", Cnp = "321241241", Name = "Bobo" };
         //event to lsiten to dbb
         EventStreamResponse FirebaseListener;
         //lsit of messages in the current conversation
@@ -203,5 +201,32 @@ namespace Jasmin
         };
         //firebase client
         IFirebaseClient client;
+
+        private async void listBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            FirebaseListener = await client.OnAsync("Groups/" + CurrentGroup + "/", (sender1, args, context) => {
+
+                if (lstMesaje.InvokeRequired)
+                {
+                    this.addMesage(args);
+                }
+                else
+                    lstMesaje.Items.Add(args.Data);
+            });
+
+            FirebaseResponse response = await client.GetAsync("Groups/"+CurrentGroup);
+            try
+            {
+                List<MessageData> list = response.ResultAs<List<MessageData>>().ToList();
+                foreach (var el in list)
+                    if (el != null && list[0] != null && !el.Equals(list[0]))
+                    {
+                        MessageList.Add(el);
+                        this.writeMessage(el);
+
+                    }
+            }
+            catch { }
+        }
     }
 }

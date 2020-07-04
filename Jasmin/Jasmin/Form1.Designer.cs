@@ -68,6 +68,7 @@
             this.listBox2.Name = "listBox2";
             this.listBox2.Size = new System.Drawing.Size(144, 433);
             this.listBox2.TabIndex = 3;
+            this.listBox2.SelectedIndexChanged += new System.EventHandler(this.listBox2_SelectedIndexChanged);
             // 
             // btnGet
             // 
@@ -92,7 +93,6 @@
             this.Name = "Form1";
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_LoadAsync);
-            this.Disposed += Form1_Disposed;
             this.ResumeLayout(false);
             this.PerformLayout();
 
