@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 using System.Windows.Forms;
 
 using Firebase;
@@ -47,9 +48,7 @@ namespace Jasmin
 
         private async void btnSend_ClickAsync(object sender, EventArgs e)
         {
-            int id = 0;
-            if (MessageList.Count > 0)
-                id=Convert.ToInt32(MessageList.Count+1);
+            int id = (int)FocusedGroup.messages[FocusedGroup.messages.Count - 1].Id;
             
             var messageData = new MessageData
             {
@@ -78,7 +77,31 @@ namespace Jasmin
             {
                 Groups.Add(new Group(child));
             }
+            foreach(var group in Groups)
+            {
+                listBox2.Items.Add(group.Name);
+                FirebaseListener = await client.OnAsync("Groups/" + group.Name + "/", (sender1, args, context) => {
 
+                    if (lstMesaje.InvokeRequired)
+                    {
+                       if(group==FocusedGroup)
+                       {
+                            lstMesaje.Items.Add(args.Data);
+
+                       }
+
+
+                    }
+                    else
+                        if (group == FocusedGroup)
+                        {
+                            lstMesaje.Items.Add(args.Data);
+
+                        }
+                });
+
+
+            }
            
 
 
@@ -202,31 +225,26 @@ namespace Jasmin
         //firebase client
         IFirebaseClient client;
 
-        private async void listBox2_SelectedIndexChanged(object sender, EventArgs e)
+        Group FocusedGroup = new Group();
+
+        private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
-            FirebaseListener = await client.OnAsync("Groups/" + CurrentGroup + "/", (sender1, args, context) => {
-
-                if (lstMesaje.InvokeRequired)
-                {
-                    this.addMesage(args);
-                }
-                else
-                    lstMesaje.Items.Add(args.Data);
-            });
-
-            FirebaseResponse response = await client.GetAsync("Groups/"+CurrentGroup);
-            try
+            foreach(var group in Groups)
             {
-                List<MessageData> list = response.ResultAs<List<MessageData>>().ToList();
-                foreach (var el in list)
-                    if (el != null && list[0] != null && !el.Equals(list[0]))
-                    {
-                        MessageList.Add(el);
-                        this.writeMessage(el);
-
-                    }
+                if (group.Name == listBox2.SelectedItem.ToString())
+                {
+                    FocusedGroup = group;
+                    lstMesaje.Items.Clear();
+                    foreach (var mesaj in group.messages)
+                        try
+                        {
+                            lstMesaje.Items.Add(mesaj.Message);
+                        }
+                        catch (NullReferenceException) { }
+                    return;
+                }
             }
-            catch { }
+            
         }
     }
 }

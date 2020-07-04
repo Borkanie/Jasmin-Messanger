@@ -26,7 +26,7 @@ namespace Jasmin
             }
             //var current = JObject.Parse(JSON);
         }
-        private string Name { get; set; }
+        public string Name { get; set; }
         public List<MessageData> messages = new List<MessageData>();
 
     }
